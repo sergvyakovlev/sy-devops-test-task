@@ -1,0 +1,11 @@
+appName: webservice-app
+
+replicaCount: 1
+
+containers:
+  webservice: webservice:local
+  redis: redis:7.2.4-alpine
+
+environment:
+  redisAddrKey: REDIS_ADDR
+  redisAddrValue: "redis:6379"

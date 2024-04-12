@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-webservice-app
+  labels:
+    app: webservice
+spec:
+  selector:
+    matchLabels:
+      app: webservice
+  template:
+    metadata:
+      labels:
+        app: webservice
+    spec:
+      containers:
+      - name: {{ .Release.Name }}
+        image: {{ .Values.containers.webservice }}
+        ports:
+        - containerPort: 8080
+        env:
+        - name: {{ .Values.environment.redisAddrKey }}
+          value: {{ .Values.environment.redisAddrValue }}
+  strategy:
+   type: RollingUpdate
+   rollingUpdate:
+     maxUnavailable: 1
