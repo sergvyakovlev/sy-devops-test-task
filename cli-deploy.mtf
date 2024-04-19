@@ -1,3 +1,6 @@
+###
+# Project minikube+helm configuretion
+###
 # The Helm chart is only for the "minimal local infrastructure" based on minikube and not ready for any other env.
 # Based on https://minikube.sigs.k8s.io/docs/handbook/pushing/#2-push-images-using-cache-command
 
@@ -13,36 +16,11 @@ helm install go-app chart
 # Apply container changes
 docker build --tag webservice:local . --no-cache && helm upgrade go-app chart
 
-# Alternative access for MacOS because of https://github.com/kubernetes/minikube/issues/11193#issuecomment-826331511
+###
+# Alternative for MacOS because of https://github.com/kubernetes/minikube/issues/11193#issuecomment-826331511
+###
 minikube service serviceName
 # OR
 kubectl port-forward svc/webservice 8080:8080
+kubectl port-forward svc/redis 6379:6379
 
-###
-# Monitoring based on https://semaphoreci.com/blog/prometheus-grafana-kubernetes-helm
-###
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo add grafana https://grafana.github.io/helm-charts
-helm repo update
-helm install prometheus prometheus-community/prometheus
-helm install grafana grafana/grafana
-
-kubectl expose service prometheus-server --type=NodePort --target-port=9090 --name=prometheus-server-ext
-kubectl expose service grafana --type=NodePort --target-port=3000 --name=grafana-ext
-minikube service prometheus-server-ext &
-minikube service grafana-ext &
-
-# Login to grafana
-echo "User: admin"
-echo "Password: $(kubectl get secret --namespace default grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo)"
-
-# Alternative access minikube's grafana from MacOS because of https://github.com/kubernetes/minikube/issues/11193#issuecomment-826331511
-export POD_SERVER=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=prometheus,app.kubernetes.io/instance=prometheus" -o jsonpath="{.items[0].metadata.name}")
-export POD_ALERTMANAGER=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=alertmanager,app.kubernetes.io/instance=prometheus" -o jsonpath="{.items[0].metadata.name}")
-export POD_PUSHGATEWAY=$(kubectl get pods --namespace default -l "app=prometheus-pushgateway,component=pushgateway" -o jsonpath="{.items[0].metadata.name}")
-kubectl --namespace default port-forward $POD_SERVER 9090 & \
-kubectl --namespace default port-forward $POD_ALERTMANAGER 9093 & \
-kubectl --namespace default port-forward $POD_PUSHGATEWAY 9091 &
-export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=grafana" -o jsonpath="{.items[0].metadata.name}")
-kubectl --namespace default port-forward $POD_NAME 3000 &
-# use 'fg' to stop port-forward
