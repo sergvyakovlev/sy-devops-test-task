@@ -3,7 +3,7 @@
 # Redeploy POD to minikube
 ###
 eval $(minikube docker-env)
-#docker build --tag webservice:local . --no-cache
+docker build --tag webservice:local . --no-cache
 
 # For MacOS
 pkill -f "port-forward svc/webservice"
